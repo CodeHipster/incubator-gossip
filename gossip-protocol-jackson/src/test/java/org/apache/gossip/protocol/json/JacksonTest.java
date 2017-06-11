@@ -84,6 +84,7 @@ public class JacksonTest {
   @Test
   public void testMessageEqualityAssumptions() {
     long timeA = System.nanoTime();
+    System.out.println("wasting some clock cycles");
     long timeB = System.nanoTime();
     Assert.assertNotEquals(timeA, timeB);
     
