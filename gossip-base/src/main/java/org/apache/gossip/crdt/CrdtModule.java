@@ -17,15 +17,15 @@
  */
 package org.apache.gossip.crdt;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 abstract class OrSetMixin<E> {
   @JsonCreator
@@ -33,6 +33,25 @@ abstract class OrSetMixin<E> {
   @JsonProperty("elements") abstract Map<E, Set<UUID>> getElements();
   @JsonProperty("tombstones") abstract Map<E, Set<UUID>> getTombstones();
   @JsonIgnore abstract boolean isEmpty();
+}
+
+abstract class LWWSetMixin<ElementType> {
+  @JsonCreator
+  LWWSetMixin(@JsonProperty("data") Map<ElementType, LwwSet.Timestamps> struct) { }
+  @JsonProperty("data") abstract Map<ElementType, LwwSet.Timestamps> getStruct();
+}
+
+abstract class LWWSetTimestampsMixin {
+  @JsonCreator
+  LWWSetTimestampsMixin(@JsonProperty("add") long latestAdd, @JsonProperty("remove") long latestRemove) { }
+  @JsonProperty("add") abstract long getLatestAdd();
+  @JsonProperty("remove") abstract long getLatestRemove();
+}
+
+abstract class MaxChangeSetMixin<E> {
+  @JsonCreator
+  MaxChangeSetMixin(@JsonProperty("data") Map<E, Integer> struct) { }
+  @JsonProperty("data") abstract Map<E, Integer> getStruct();
 }
 
 abstract class GrowOnlySetMixin<E>{
@@ -46,6 +65,13 @@ abstract class GrowOnlyCounterMixin {
   @JsonCreator
   GrowOnlyCounterMixin(@JsonProperty("counters") Map<String, Long> counters) { }
   @JsonProperty("counters") abstract Map<String, Long> getCounters();
+}
+
+abstract class PNCounterMixin {
+  @JsonCreator
+  PNCounterMixin(@JsonProperty("p-counters") Map<String, Long> up, @JsonProperty("n-counters") Map<String,Long> down) { }
+  @JsonProperty("p-counters") abstract Map<String, Long> getPCounters();
+  @JsonProperty("n-counters") abstract Map<String, Long> getNCounters();
 }
 
 //If anyone wants to take a stab at this. please have at it
@@ -63,6 +89,10 @@ public class CrdtModule extends SimpleModule {
     context.setMixInAnnotations(OrSet.class, OrSetMixin.class);
     context.setMixInAnnotations(GrowOnlySet.class, GrowOnlySetMixin.class);
     context.setMixInAnnotations(GrowOnlyCounter.class, GrowOnlyCounterMixin.class);
+    context.setMixInAnnotations(PNCounter.class, PNCounterMixin.class);
+    context.setMixInAnnotations(LwwSet.class, LWWSetMixin.class);
+    context.setMixInAnnotations(LwwSet.Timestamps.class, LWWSetTimestampsMixin.class);
+    context.setMixInAnnotations(MaxChangeSet.class, MaxChangeSetMixin.class);
   }
 
 }
